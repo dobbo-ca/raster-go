@@ -15,14 +15,21 @@ Newest first. This file replaces a changelog.
 Both clear the 1.5x bar of the keep rule (spec 14.2). The other half of the rule,
 a kernel share of at least 5% of its stage's CPU in a profile of the Go build,
 cannot be measured until kleio calls raster-go; the asm is kept on the speedup
-alone and that condition is open. The linux/arm64 hosted runner and the
-amd64 runs are in the CI log of each PR (`Kernel bench` steps).
+alone and that condition is open. The hosted linux/arm64 run (the reproducible arm64
+host, spec 14.2) is in the CI log of the PR (`Short kernel bench`, asm and
+purego).
 
-**Kept (amd64, AVX2): provisional.** The same two kernels have AVX2 paths.
-They were written without an AVX2 host to hand (Rosetta on the Mac does not
-report AVX2); the hosted ubuntu-24.04 runner is the first machine to execute
-them, and amd64 numbers for the keep rule come from its `Kernel bench` step.
-The 9800X3D judgement runs through kleio's `lib-bench.yml` after merge.
+**Kept (amd64, AVX2).** First executed on the hosted ubuntu-24.04 runner (AMD
+EPYC 9V45, `bench/results/linux-amd64-hosted.txt`, n=5): the equality, golden
+and fuzz tests passed there on the first run, and the benches were:
+
+| Kernel | Go reference | AVX2 | Speedup |
+|---|---|---|---|
+| `Scale2to1` grey | 2.67 ms | 0.186 ms | 14.3x |
+| `Luma` | 10.6 ms | 0.918 ms | 11.5x |
+
+The Mac cannot run AVX2 (Rosetta does not report it), so the 9800X3D judgement
+and any AVX-512 question go through kleio's `lib-bench.yml` after merge.
 
 **Go only, by design in v0.1.0:**
 - `Scale2to1` RGB: needs a de-interleave; the Go loop is as fast as the shipped

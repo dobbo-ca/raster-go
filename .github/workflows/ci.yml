@@ -53,5 +53,7 @@ jobs:
         run: go test -count=1 -tags purego ./...
       - name: No-FMA scan
         run: ./scripts/nofma.sh
-      - name: Short kernel bench
-        run: go test -run '^$' -bench . -benchtime 100ms -count 3 .
+      - name: Short kernel bench (asm, then purego)
+        run: |
+          go test -run '^$' -bench . -benchtime 100ms -count 3 .
+          go test -run '^$' -tags purego -bench . -benchtime 100ms -count 3 .
