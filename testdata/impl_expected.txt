@@ -1,0 +1,9 @@
+# kernel arch tiers (best first) the keep rule kept; see docs/decisions.md
+scale2to1 amd64 avx2
+scale2to1 arm64 neon
+luma amd64 avx2
+luma arm64 neon
+resample amd64 generic
+resample arm64 generic
+rotate90 amd64 generic
+rotate90 arm64 generic

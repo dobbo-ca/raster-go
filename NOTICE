@@ -1,0 +1,8 @@
+raster-go
+Copyright (c) 2026 Chris Dobbyn. Licensed under the MIT licence (LICENSE).
+
+Third-party code: none in this release.
+
+Where raster-go ports algorithms from Leptonica (planned for threshold, Otsu,
+Sauvola, morphology and rasterop), the port's file carries the attribution and
+this file gains Leptonica's BSD-2-Clause licence text in the same change.

@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+      - name: Vet (amd64 and arm64)
+        run: make vet
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.15.0
+      - name: Test (race; equality, golden hashes and Impl table included)
+        run: go test -race -count=1 ./...
+      - name: Test (purego)
+        run: go test -count=1 -tags purego ./...
+      - name: Forced tiers
+        run: |
+          grep -o -w -m1 avx2 /proc/cpuinfo || echo "host has no AVX2"
+          grep -o -w -m1 avx512f /proc/cpuinfo || echo "host has no AVX-512: the avx512 tier runs as avx2"
+          for t in generic avx2 avx512; do RASTERGO_CPU=$t go test -count=1 -v -run 'TestImpl|TestGolden' . || exit 1; done
+      - name: Fuzz seeds and a short fuzz
+        run: |
+          for f in FuzzScale2to1 FuzzLuma FuzzRotate90 FuzzResample; do go test -run '^$' -fuzz "^$f\$" -fuzztime 10s . || exit 1; done
+      - name: No-FMA scan
+        run: ./scripts/nofma.sh
+      - name: Kernel bench (keep rule input, not a gate)
+        run: |
+          go test -run '^$' -bench . -benchtime 300ms -count 5 . | tee asm.txt
+          go test -run '^$' -tags purego -bench . -benchtime 300ms -count 5 . | tee purego.txt
+
+  arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+      - name: Test (equality, golden hashes, Impl table)
+        run: go test -count=1 ./...
+      - name: Test (purego)
+        run: go test -count=1 -tags purego ./...
+      - name: No-FMA scan
+        run: ./scripts/nofma.sh
+      - name: Short kernel bench
+        run: go test -run '^$' -bench . -benchtime 100ms -count 3 .
