@@ -19,6 +19,10 @@ alone and that condition is open. The hosted linux/arm64 run (the reproducible a
 host, spec 14.2) is in the CI log of the PR (`Short kernel bench`, asm and
 purego).
 
+Hosted linux/arm64 (`bench/results/linux-arm64-hosted.txt`, n=3, too few for a
+p-value): grey `Scale2to1` 3.55 ms to 0.358 ms (9.9x), `Luma` 11.0 ms to 1.67 ms
+(6.6x). Same verdict.
+
 **Kept (amd64, AVX2).** First executed on the hosted ubuntu-24.04 runner (AMD
 EPYC 9V45, `bench/results/linux-amd64-hosted.txt`, n=5): the equality, golden
 and fuzz tests passed there on the first run, and the benches were:

@@ -1,0 +1,25 @@
+# linux/arm64, hosted ubuntu-24.04-arm (4 vCPU), CI run 42538864753, n=3 only (too few for benchstat p-values; ratios are 10x+ so the keep rule is not close); purego vs asm
+goos: linux
+goarch: arm64
+pkg: github.com/dobbo-ca/raster-go
+                           │ /tmp/r_pg.txt │            /tmp/r_asm.txt             │
+                           │    sec/op     │    sec/op     vs base                 │
+Scale2to1/gray/2550x3300-4   3545.7µ ± ∞ ¹   358.1µ ± ∞ ¹        ~ (p=0.100 n=3) ²
+Scale2to1/rgb/2550x3300-4     8.806m ± ∞ ¹   8.779m ± ∞ ¹        ~ (p=0.700 n=3) ²
+Luma-4                       11.041m ± ∞ ¹   1.672m ± ∞ ¹        ~ (p=0.100 n=3) ²
+Resample/300to150-4           42.53m ± ∞ ¹   41.38m ± ∞ ¹        ~ (p=0.100 n=3) ²
+Rotate90-4                    43.11m ± ∞ ¹   42.72m ± ∞ ¹        ~ (p=0.700 n=3) ²
+geomean                       14.46m         6.217m        -57.00%
+¹ need >= 6 samples for confidence interval at level 0.95
+² need >= 4 samples to detect a difference at alpha level 0.05
+
+                           │ /tmp/r_pg.txt │              /tmp/r_asm.txt              │
+                           │      B/s      │      B/s        vs base                  │
+Scale2to1/gray/2550x3300-4   2.210Gi ± ∞ ¹   21.882Gi ± ∞ ¹         ~ (p=0.100 n=3) ²
+Scale2to1/rgb/2550x3300-4    2.670Gi ± ∞ ¹    2.678Gi ± ∞ ¹         ~ (p=0.700 n=3) ²
+Luma-4                       2.129Gi ± ∞ ¹   14.064Gi ± ∞ ¹         ~ (p=0.100 n=3) ²
+Resample/300to150-4          188.7Mi ± ∞ ¹    194.0Mi ± ∞ ¹         ~ (p=0.100 n=3) ²
+Rotate90-4                   186.2Mi ± ∞ ¹    187.9Mi ± ∞ ¹         ~ (p=0.700 n=3) ²
+geomean                      861.3Mi          1.956Gi        +132.57%
+¹ need >= 6 samples for confidence interval at level 0.95
+² need >= 4 samples to detect a difference at alpha level 0.05
