@@ -59,5 +59,15 @@ dropped, not averaged.
 default (1<<26 px, 256 MiB, 256 MiB), negative is `ErrInvalid` (owner decision
 D2). No package budget.
 
+**File naming.** Kernels are `<k>.go` (reference), `<k>_amd64.go/.s`,
+`<k>_arm64.go/.s` and `<k>_noasm.go`, not the spec's `<k>_generic.go` plus
+`kernel_asm.go`/`kernel_purego.go`: the build tags select the arch files
+directly, so no separate asm/purego switch file is needed. Deliberate.
+
+**Resample scratch.** `tapStride` is capped at the source length (a row never
+has more taps than samples) and `ScratchBytes` counts the float64 weight row
+`build` uses per axis; `TestResampleScratchExact` asserts an allowed call
+allocates no more than the reported need.
+
 **Golden hashes** are generated on amd64 with `-tags purego GOAMD64=v1` and
 checked on every tier and arch.

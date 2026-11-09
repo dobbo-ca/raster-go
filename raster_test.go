@@ -16,6 +16,7 @@ import (
 	raster "github.com/dobbo-ca/raster-go"
 	"github.com/dobbo-ca/raster-go/internal/cpu"
 	"github.com/dobbo-ca/raster-go/internal/fixture"
+	"github.com/dobbo-ca/raster-go/internal/resample"
 )
 
 var bg = context.Background()
@@ -262,6 +263,23 @@ func TestResampleScratchLimit(t *testing.T) {
 	}
 }
 
+// An allowed Resample must not allocate more than the need it reported.
+func TestResampleScratchExact(t *testing.T) {
+	for _, c := range [][4]int{{200000, 4, 1, 1}, {4, 200000, 1, 1}, {3000, 2000, 700, 500}} {
+		src := plane(t, 1, c[0], c[1], 1, 0)
+		dst := blank(t, c[2], c[3], 1, 0)
+		need := int64(resample.ScratchBytes(c[0], c[1], c[2], c[3], 1))
+		var before, after runtime.MemStats
+		runtime.ReadMemStats(&before)
+		err := raster.Resample(bg, dst, src, raster.Limits{MaxScratchBytes: need})
+		runtime.ReadMemStats(&after)
+		must(t, err)
+		if d := int64(after.TotalAlloc - before.TotalAlloc); d > need+1<<16 { // slack: runtime noise, as in TestResampleScratchLimit
+			t.Errorf("%v: allocated %d, reported need %d", c, d, need)
+		}
+	}
+}
+
 func TestCancel(t *testing.T) {
 	ctx, cancel := context.WithCancel(bg)
 	cancel()
@@ -374,6 +392,11 @@ func TestImpl(t *testing.T) {
 					break
 				}
 			}
+		}
+		// CI exports the ISA it read from /proc/cpuinfo, so a detector that
+		// always says no fails here instead of agreeing with itself.
+		if e := os.Getenv("RASTERGO_EXPECT"); e != "" && !purego && cpu.Forced != "generic" && slices.Contains(fs[2:], e) {
+			want = e
 		}
 		if got := raster.Impl(fs[0]); got != want {
 			t.Errorf("%s: Impl %q, want %q (table %v, RASTERGO_CPU=%q)", fs[0], got, want, fs[2:], cpu.Forced)

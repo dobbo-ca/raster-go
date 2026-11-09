@@ -18,7 +18,10 @@ type taps struct {
 
 func fscale(srcN, dstN int) float64 { return math.Max(float64(srcN)/float64(dstN), 1) }
 
-func tapStride(srcN, dstN int) int64 { return int64(math.Ceil(float64(4*fscale(srcN, dstN)))) + 2 }
+// tapStride is the widest tap row; a row never has more taps than source samples.
+func tapStride(srcN, dstN int) int64 {
+	return min(int64(math.Ceil(float64(4*fscale(srcN, dstN))))+2, int64(srcN))
+}
 
 func mulSat(a, b int64) int64 {
 	if a != 0 && b > math.MaxInt64/a {
@@ -34,12 +37,13 @@ func addSat(a, b int64) int64 {
 	return a + b
 }
 
-// ScratchBytes is what Run allocates: the intermediate plane, both tap tables
-// and one int32 accumulator row. It saturates instead of overflowing.
+// ScratchBytes is what Run allocates: the intermediate plane, both tap tables,
+// the float64 weight row build uses per axis and one int32 accumulator row. It saturates instead of overflowing.
 func ScratchBytes(sw, sh, dw, dh, ch int) int64 {
 	n := mulSat(mulSat(int64(sh), int64(dw)), int64(ch))
 	n = addSat(n, mulSat(int64(dw), 2*tapStride(sw, dw)+8))
 	n = addSat(n, mulSat(int64(dh), 2*tapStride(sh, dh)+8))
+	n = addSat(n, 8*(tapStride(sw, dw)+tapStride(sh, dh)))
 	return addSat(n, mulSat(mulSat(int64(dw), int64(ch)), 4))
 }
 

@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: go.mod
+      - name: Host ISA (TestImpl must see it)
+        run: grep -qw avx2 /proc/cpuinfo && echo RASTERGO_EXPECT=avx2 >> "$GITHUB_ENV"
       - name: Vet (amd64 and arm64)
         run: make vet
       - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
@@ -47,13 +49,16 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: go.mod
+      - name: Host ISA (TestImpl must see it)
+        run: grep -qw asimd /proc/cpuinfo && echo RASTERGO_EXPECT=neon >> "$GITHUB_ENV"
       - name: Test (equality, golden hashes, Impl table)
         run: go test -count=1 ./...
       - name: Test (purego)
         run: go test -count=1 -tags purego ./...
       - name: No-FMA scan
         run: ./scripts/nofma.sh
-      - name: Short kernel bench (asm, then purego)
+      - name: Kernel bench, asm vs purego (keep rule, spec 14.2)
         run: |
-          go test -run '^$' -bench . -benchtime 100ms -count 3 .
-          go test -run '^$' -tags purego -bench . -benchtime 100ms -count 3 .
+          go test -run '^$' -bench . -benchtime 100ms -count 10 . | tee asm.txt
+          go test -run '^$' -tags purego -bench . -benchtime 100ms -count 10 . | tee purego.txt
+          go run golang.org/x/perf/cmd/benchstat@v0.0.0-20261009192801-be2c69fb417e purego.txt asm.txt | tee benchstat.txt

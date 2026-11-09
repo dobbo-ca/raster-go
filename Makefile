@@ -22,9 +22,7 @@ bench:
 	go test -run '^$$' -bench . -benchtime 300ms -count 6 .
 
 # Native arm64 check (Mac or arm64 runner): equality against the references,
-# goldens, Impl table, purego, forced tiers and a short bench.
+# goldens, Impl table, purego, forced tiers and a short bench saved under
+# bench/results/, then the arm64-check commit status.
 arm64-check:
-	go test -count=1 ./...
-	go test -count=1 -tags purego ./...
-	RASTERGO_CPU=generic go test -count=1 ./...
-	go test -run '^$$' -bench . -benchtime 100ms .
+	./scripts/arm64-check.sh
