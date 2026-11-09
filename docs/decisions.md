@@ -5,7 +5,7 @@ Newest first. This file replaces a changelog.
 ## v0.1.0: first kernels, keep rule applied
 
 **Kept (arm64, NEON).** Measured on darwin/arm64 (Apple M4 Pro, 2550x3300,
-`bench/results/darwin-arm64.txt`, benchstat p=0.002, n=6):
+`bench/results/darwin-arm64.txt`, benchstat p=0.002, n=6; recorded beside the hosted numbers):
 
 | Kernel | Go reference | NEON | Speedup |
 |---|---|---|---|
@@ -19,9 +19,10 @@ alone and that condition is open. The hosted linux/arm64 run (the reproducible a
 host, spec 14.2) is in the CI log of the PR (`Short kernel bench`, asm and
 purego).
 
-Hosted linux/arm64 (`bench/results/linux-arm64-hosted.txt`, n=3, too few for a
-p-value): grey `Scale2to1` 3.55 ms to 0.358 ms (9.9x), `Luma` 11.0 ms to 1.67 ms
-(6.6x). Same verdict.
+Hosted linux/arm64 (`bench/results/linux-arm64-hosted.txt`, the judging host,
+`-count 10`, benchstat p=0.000 n=10): grey `Scale2to1` 3.53 ms to 0.380 ms
+(-89%, 9.3x), `Luma` 10.97 ms to 1.63 ms (-85%, 6.7x). Same verdict, now
+significant on the hosted runner.
 
 **Kept (amd64, AVX2).** First executed on the hosted ubuntu-24.04 runner (AMD
 EPYC 9V45, `bench/results/linux-amd64-hosted.txt`, n=5): the equality, golden
