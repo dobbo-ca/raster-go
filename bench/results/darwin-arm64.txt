@@ -1,0 +1,22 @@
+# darwin/arm64, Apple M4 Pro, go1.27.3, 2550x3300 pages, benchstat purego vs asm (short Mac run; the linux/arm64 hosted-runner run judges the keep rule)
+goos: darwin
+goarch: arm64
+pkg: github.com/dobbo-ca/raster-go
+cpu: Apple M4 Pro
+                            │ /tmp/b_purego.txt │           /tmp/b_asm.txt           │
+                            │      sec/op       │   sec/op     vs base               │
+Scale2to1/gray/2550x3300-14       1908.5µ ± 12%   128.7µ ± 1%  -93.26% (p=0.002 n=6)
+Scale2to1/rgb/2550x3300-14         4.791m ±  2%   4.753m ± 4%        ~ (p=0.937 n=6)
+Luma-14                           5865.0µ ±  2%   419.0µ ± 9%  -92.86% (p=0.002 n=6)
+Resample/300to150-14               27.91m ±  5%   27.29m ± 3%   -2.25% (p=0.026 n=6)
+Rotate90-14                        22.12m ±  6%   21.17m ± 6%        ~ (p=0.240 n=6)
+geomean                            8.017m         2.717m       -66.11%
+
+                            │ /tmp/b_purego.txt │             /tmp/b_asm.txt             │
+                            │        B/s        │      B/s       vs base                 │
+Scale2to1/gray/2550x3300-14       4.107Gi ± 11%   60.886Gi ± 1%  +1382.66% (p=0.002 n=6)
+Scale2to1/rgb/2550x3300-14        4.908Gi ±  2%    4.947Gi ± 4%          ~ (p=0.937 n=6)
+Luma-14                           4.009Gi ±  2%   56.114Gi ± 8%  +1299.74% (p=0.002 n=6)
+Resample/300to150-14              287.5Mi ±  5%    294.1Mi ± 3%     +2.29% (p=0.026 n=6)
+Rotate90-14                       362.9Mi ±  6%    379.1Mi ± 5%          ~ (p=0.240 n=6)
+geomean                           1.517Gi          4.476Gi        +195.05%

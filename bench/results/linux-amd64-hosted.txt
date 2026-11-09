@@ -1,0 +1,24 @@
+# linux/amd64, hosted ubuntu-24.04 (AMD EPYC 9V45, 4 vCPU), go1.27, CI run 42538610290, n=5, benchtime 300ms; benchstat purego vs asm
+goos: linux
+goarch: amd64
+pkg: github.com/dobbo-ca/raster-go
+cpu: AMD EPYC 9V45 96-Core Processor
+                           │ /tmp/a_pg.txt  │           /tmp/a_asm.txt            │
+                           │     sec/op     │    sec/op     vs base               │
+Scale2to1/gray/2550x3300-4    2670.7µ ± ∞ ¹   186.4µ ± ∞ ¹  -93.02% (p=0.008 n=5)
+Scale2to1/rgb/2550x3300-4      7.279m ± ∞ ¹   7.280m ± ∞ ¹        ~ (p=0.690 n=5)
+Luma-4                       10604.4µ ± ∞ ¹   918.4µ ± ∞ ¹  -91.34% (p=0.008 n=5)
+Resample/300to150-4            39.71m ± ∞ ¹   44.90m ± ∞ ¹  +13.07% (p=0.008 n=5)
+Rotate90-4                     23.51m ± ∞ ¹   24.32m ± ∞ ¹   +3.45% (p=0.016 n=5)
+geomean                        11.40m         4.234m        -62.86%
+¹ need >= 6 samples for confidence interval at level 0.95
+
+                           │ /tmp/a_pg.txt │             /tmp/a_asm.txt              │
+                           │      B/s      │      B/s        vs base                 │
+Scale2to1/gray/2550x3300-4   2.934Gi ± ∞ ¹   42.045Gi ± ∞ ¹  +1332.80% (p=0.008 n=5)
+Scale2to1/rgb/2550x3300-4    3.230Gi ± ∞ ¹    3.230Gi ± ∞ ¹          ~ (p=0.690 n=5)
+Luma-4                       2.217Gi ± ∞ ¹   25.601Gi ± ∞ ¹  +1054.68% (p=0.008 n=5)
+Resample/300to150-4          202.1Mi ± ∞ ¹    178.7Mi ± ∞ ¹    -11.56% (p=0.008 n=5)
+Rotate90-4                   341.4Mi ± ∞ ¹    330.0Mi ± ∞ ¹     -3.34% (p=0.016 n=5)
+geomean                      1.067Gi          2.872Gi         +169.22%
+¹ need >= 6 samples for confidence interval at level 0.95

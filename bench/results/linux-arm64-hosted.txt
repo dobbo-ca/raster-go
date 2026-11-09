@@ -1,0 +1,21 @@
+# linux/arm64, hosted ubuntu-24.04-arm (4 vCPU), CI run 42540119093, -count 10, benchstat purego vs asm (spec 14.2 keep rule judged here)
+                           │  purego.txt  │               asm.txt               │
+                           │    sec/op    │   sec/op     vs base                │
+Scale2to1/gray/2550x3300-4   3532.6µ ± 0%   379.6µ ± 6%  -89.25% (p=0.000 n=10)
+Scale2to1/rgb/2550x3300-4     8.738m ± 0%   8.785m ± 0%   +0.54% (p=0.005 n=10)
+Luma-4                       10.972m ± 0%   1.633m ± 2%  -85.12% (p=0.000 n=10)
+Resample/300to150-4           42.63m ± 0%   41.55m ± 1%   -2.52% (p=0.000 n=10)
+Rotate90-4                    42.84m ± 1%   42.63m ± 0%        ~ (p=0.075 n=10)
+geomean                       14.40m        6.264m       -56.49%
+
+                           │  purego.txt  │                asm.txt                 │
+                           │     B/s      │      B/s       vs base                 │
+Scale2to1/gray/2550x3300-4   2.219Gi ± 0%   20.646Gi ± 6%  +830.64% (p=0.000 n=10)
+Scale2to1/rgb/2550x3300-4    2.691Gi ± 0%    2.676Gi ± 0%    -0.53% (p=0.005 n=10)
+Luma-4                       2.143Gi ± 0%   14.400Gi ± 2%  +572.03% (p=0.000 n=10)
+Resample/300to150-4          188.3Mi ± 0%    193.1Mi ± 1%    +2.58% (p=0.000 n=10)
+Rotate90-4                   187.3Mi ± 1%    188.2Mi ± 0%         ~ (p=0.072 n=10)
+geomean                      865.0Mi         1.942Gi       +129.83%
+﻿2026-11-09T00:26:39.7166640Z Post job cleanup.
+[command]/opt/hostedtoolcache/go/1.27.3/arm64/bin/go env GOMODCACHE
+[command]/opt/hostedtoolcache/go/1.27.3/arm64/bin/go env GOCACHE
