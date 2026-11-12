@@ -3,7 +3,9 @@ package raster_test
 import (
 	"context"
 	"errors"
+	"math"
 	"runtime"
+	"strconv"
 	"testing"
 
 	raster "github.com/dobbo-ca/raster-go"
@@ -92,6 +94,21 @@ func TestSubsample1bppRefusesBeforeAllocating(t *testing.T) {
 	short := raster.Bitmap{Pix: make([]byte, 1), W: 16, H: 2, Stride: 2}
 	if err := raster.Subsample1bpp(bg, dst, short, raster.Limits{}); !errors.Is(err, raster.ErrInvalid) {
 		t.Fatalf("short: %v", err)
+	}
+}
+
+// The x-index table is int32, so a source wider than MaxInt32 is refused even
+// when the caller raised MaxPixels.
+func TestSubsample1bppWideSourceRefused(t *testing.T) {
+	if strconv.IntSize < 64 {
+		t.Skip("needs 64-bit int")
+	}
+	w := math.MaxInt32 + 1
+	src := raster.Bitmap{Pix: make([]byte, (w+7)/8), W: w, H: 1, Stride: (w + 7) / 8}
+	dst := bitmap(t, 1, 8, 1, 0)
+	err := raster.Subsample1bpp(context.Background(), dst, src, raster.Limits{MaxPixels: 1 << 40})
+	if !errors.Is(err, raster.ErrInvalid) {
+		t.Fatalf("err = %v, want ErrInvalid", err)
 	}
 }
 

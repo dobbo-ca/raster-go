@@ -220,6 +220,9 @@ func Subsample1bpp(ctx context.Context, dst, src Bitmap, lim Limits) error {
 	if err := dst.validate("dst"); err != nil {
 		return err
 	}
+	if src.W > math.MaxInt32 { // the x-index table is int32
+		return fmt.Errorf("%w: src: width above MaxInt32", ErrInvalid)
+	}
 	out := int64(dst.H) * int64((dst.W+7)/8)
 	if err := checkLimits(int64(src.W)*int64(src.H), int64(dst.W)*int64(dst.H), out, subsample.ScratchBytes(dst.W), lim); err != nil {
 		return err

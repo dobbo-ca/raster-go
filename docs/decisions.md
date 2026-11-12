@@ -47,8 +47,8 @@ and any AVX-512 question go through kleio's `lib-bench.yml` after merge.
 - `Rotate90`: tiled Go, no asm in the plan (spec 6.1 lists none).
 - `Subsample1bpp`: Go only, no asm until profiling says otherwise. The sample
   phase is the pixel centre, `(2d+1)*s/(2*dstN)` per axis, not yet checked
-  against gs: K0's phase probe is not done, so this is the plan's default and
-  the gs bit-equality oracle in kleio (K3) may adjust it.
+  against gs: K0's phase probe is not done. The plan names no phase, so the centre is the
+  implementer's choice, pending K0/K3; the gs bit-equality oracle in kleio (K3) may adjust it.
 - No AVX-512 path: nothing measured to justify one. `RASTERGO_CPU=avx512`
   behaves as `avx2`.
 
