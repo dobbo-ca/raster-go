@@ -6,6 +6,7 @@ import (
 	"math"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	raster "github.com/dobbo-ca/raster-go"
@@ -109,6 +110,23 @@ func TestSubsample1bppWideSourceRefused(t *testing.T) {
 	err := raster.Subsample1bpp(context.Background(), dst, src, raster.Limits{MaxPixels: 1 << 40})
 	if !errors.Is(err, raster.ErrInvalid) {
 		t.Fatalf("err = %v, want ErrInvalid", err)
+	}
+}
+
+func TestSubsample1bppHugeDimsRefused(t *testing.T) {
+	if strconv.IntSize < 64 {
+		t.Skip("needs 64-bit int")
+	}
+	big := math.MaxInt32 + 1
+	lim := raster.Limits{MaxPixels: 1 << 40, MaxOutputBytes: 1 << 40, MaxScratchBytes: 1 << 40}
+	for name, c := range map[string][2]raster.Bitmap{
+		"src.H": {{W: 1, H: 1, Stride: 1}, {W: 1, H: big, Stride: 1}},
+		"dst.H": {{W: 1, H: big, Stride: 1}, {W: 1, H: 1, Stride: 1}},
+		"dst.W": {{W: 1, H: 1, Stride: 1}, {W: big, H: 1, Stride: (big + 7) / 8}},
+	} {
+		if err := raster.Subsample1bpp(context.Background(), c[0], c[1], lim); !errors.Is(err, raster.ErrInvalid) || !strings.Contains(err.Error(), "MaxInt32") {
+			t.Errorf("%s: err = %v, want ErrInvalid", name, err)
+		}
 	}
 }
 

@@ -214,14 +214,17 @@ func Resample(ctx context.Context, dst, src Plane, lim Limits) error {
 // applies to the larger of src and dst and the output cap to dst's packed
 // bytes. ctx is checked between rows. dst must not overlap src.
 func Subsample1bpp(ctx context.Context, dst, src Bitmap, lim Limits) error {
+	// the x-index table is int32 and (2d+1)*s must fit int64 on both axes
+	for _, d := range [...]int{src.W, src.H, dst.W, dst.H} {
+		if d > math.MaxInt32 {
+			return fmt.Errorf("%w: dimension above MaxInt32", ErrInvalid)
+		}
+	}
 	if err := src.validate("src"); err != nil {
 		return err
 	}
 	if err := dst.validate("dst"); err != nil {
 		return err
-	}
-	if src.W > math.MaxInt32 { // the x-index table is int32
-		return fmt.Errorf("%w: src: width above MaxInt32", ErrInvalid)
 	}
 	out := int64(dst.H) * int64((dst.W+7)/8)
 	if err := checkLimits(int64(src.W)*int64(src.H), int64(dst.W)*int64(dst.H), out, subsample.ScratchBytes(dst.W), lim); err != nil {
