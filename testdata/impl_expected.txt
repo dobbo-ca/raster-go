@@ -7,3 +7,5 @@ resample amd64 generic
 resample arm64 generic
 rotate90 amd64 generic
 rotate90 arm64 generic
+subsample1bpp amd64 generic
+subsample1bpp arm64 generic

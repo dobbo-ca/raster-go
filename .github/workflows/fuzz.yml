@@ -23,4 +23,4 @@ jobs:
           go-version-file: go.mod
       - name: Fuzz
         run: |
-          for f in FuzzScale2to1 FuzzLuma FuzzRotate90 FuzzResample; do go test -run '^$' -fuzz "^$f\$" -fuzztime 5m . || exit 1; done
+          for f in FuzzScale2to1 FuzzLuma FuzzRotate90 FuzzResample FuzzSubsample1bpp; do go test -run '^$' -fuzz "^$f\$" -fuzztime 5m . || exit 1; done
