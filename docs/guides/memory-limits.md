@@ -21,6 +21,7 @@ band. The caller reserves `MaxScratchBytes` from its budget before calling.
 | `Scale2to1` | 0 | `(W/2)*(H/2)*C` |
 | `Luma` | 0 | `W*H` |
 | `Rotate90` | 0 | `W*H*C` |
+| `Subsample1bpp` | `4*dstW` (x-index table) | `dstH*ceil(dstW/8)` |
 | `Resample` | `srcH*dstW*C` (intermediate) + `4*dstW*C` (accumulator row) + per axis `dstN*(2*stride+8) + 8*stride` (the float64 weight row), `stride = min(ceil(4*max(srcN/dstN,1))+2, srcN)` | `dstW*dstH*C` |
 
 `Resample` computes its scratch exactly (`ScratchBytes`, saturating) and checks

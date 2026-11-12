@@ -20,4 +20,4 @@ Changing which tiers a kernel keeps updates `testdata/impl_expected.txt` in the
 same diff.
 
 Fuzz: `go test -run '^$' -fuzz FuzzLuma -fuzztime 30s .` (Scale2to1, Luma,
-Rotate90, Resample). Seeds live in `testdata/fuzz/<Target>`.
+Rotate90, Resample, Subsample1bpp). Seeds live in `testdata/fuzz/<Target>`.

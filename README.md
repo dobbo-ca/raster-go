@@ -9,6 +9,7 @@ and strict limits. Standard library only, no cgo, MIT licensed.
 | `Resample` | separable Catmull-Rom, Q14 taps | Go |
 | `Luma` | RGB to grey, `(38R+75G+15B+64)>>7` | AVX2, NEON |
 | `Rotate90` | quarter turn | Go |
+| `Subsample1bpp` | packed 1-bpp nearest sample, centre phase | Go |
 
 Every call takes a `Limits` (pixels, scratch bytes, output bytes) and a
 `context.Context`. See `docs/guides/memory-limits.md`, `docs/design.md` and

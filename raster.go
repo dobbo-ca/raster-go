@@ -10,6 +10,7 @@ import (
 	"github.com/dobbo-ca/raster-go/internal/resample"
 	"github.com/dobbo-ca/raster-go/internal/rotate"
 	"github.com/dobbo-ca/raster-go/internal/scale"
+	"github.com/dobbo-ca/raster-go/internal/subsample"
 )
 
 // ErrInvalid wraps every argument error: a bad plane, mismatched dimensions
@@ -55,6 +56,33 @@ type Plane struct {
 	W, H, Stride, Channels int
 }
 
+// Bitmap is a packed 1-bpp raster, most significant bit first: pixel x of row
+// y is bit 7-x%8 of Pix[y*Stride+x/8]. Stride is in bytes.
+type Bitmap struct {
+	Pix          []byte
+	W, H, Stride int
+}
+
+func (b Bitmap) validate(name string) error {
+	if b.W <= 0 || b.H <= 0 {
+		return fmt.Errorf("%w: %s: bad width or height", ErrInvalid, name)
+	}
+	if b.W > math.MaxInt-7 {
+		return fmt.Errorf("%w: %s: width overflows", ErrInvalid, name)
+	}
+	row := (b.W + 7) / 8
+	if b.Stride < row {
+		return fmt.Errorf("%w: %s: stride below row bytes", ErrInvalid, name)
+	}
+	if b.H-1 > (math.MaxInt-row)/b.Stride {
+		return fmt.Errorf("%w: %s: size overflows", ErrInvalid, name)
+	}
+	if len(b.Pix) < (b.H-1)*b.Stride+row {
+		return fmt.Errorf("%w: %s: buffer too short", ErrInvalid, name)
+	}
+	return nil
+}
+
 func (p Plane) validate(name string) error {
 	if p.W <= 0 || p.H <= 0 || (p.Channels != 1 && p.Channels != 3) {
 		return fmt.Errorf("%w: %s: bad width, height or channels", ErrInvalid, name)
@@ -88,6 +116,11 @@ func check(dst, src Plane, scratch int64, lim Limits) error {
 	if err := dst.validate("dst"); err != nil {
 		return err
 	}
+	return checkLimits(src.pixels(), dst.pixels(), dst.bytes(), scratch, lim)
+}
+
+// checkLimits applies lim to already-validated sizes.
+func checkLimits(srcPixels, dstPixels, dstBytes, scratch int64, lim Limits) error {
 	if lim.MaxPixels < 0 || lim.MaxScratchBytes < 0 || lim.MaxOutputBytes < 0 {
 		return fmt.Errorf("%w: negative limit", ErrInvalid)
 	}
@@ -96,9 +129,9 @@ func check(dst, src Plane, scratch int64, lim Limits) error {
 		got, max int64
 		def      int64
 	}{
-		{"pixels", max(src.pixels(), dst.pixels()), lim.MaxPixels, DefaultMaxPixels},
+		{"pixels", max(srcPixels, dstPixels), lim.MaxPixels, DefaultMaxPixels},
 		{"scratch bytes", scratch, lim.MaxScratchBytes, DefaultMaxScratchBytes},
-		{"output bytes", dst.bytes(), lim.MaxOutputBytes, DefaultMaxOutputBytes},
+		{"output bytes", dstBytes, lim.MaxOutputBytes, DefaultMaxOutputBytes},
 	} {
 		m := c.max
 		if m == 0 {
@@ -173,17 +206,38 @@ func Resample(ctx context.Context, dst, src Plane, lim Limits) error {
 	return resample.Run(ctx, dst.Pix, dst.Stride, dst.W, dst.H, src.Pix, src.Stride, src.W, src.H, src.Channels)
 }
 
+// Subsample1bpp downscales (or scales) a packed 1-bpp src to dst's size by
+// nearest sample: dst pixel x takes the source pixel at (2x+1)*src.W/(2*dst.W),
+// likewise for rows, integer only, with no option for the phase. Pad bits of
+// each dst row's last byte are written zero. It allocates one int32 per dst
+// column, bounded by Limits.MaxScratchBytes before allocation; the pixel cap
+// applies to the larger of src and dst and the output cap to dst's packed
+// bytes. ctx is checked between rows. dst must not overlap src.
+func Subsample1bpp(ctx context.Context, dst, src Bitmap, lim Limits) error {
+	if err := src.validate("src"); err != nil {
+		return err
+	}
+	if err := dst.validate("dst"); err != nil {
+		return err
+	}
+	out := int64(dst.H) * int64((dst.W+7)/8)
+	if err := checkLimits(int64(src.W)*int64(src.H), int64(dst.W)*int64(dst.H), out, subsample.ScratchBytes(dst.W), lim); err != nil {
+		return err
+	}
+	return subsample.Run(ctx, dst.Pix, dst.Stride, dst.W, dst.H, src.Pix, src.Stride, src.W, src.H)
+}
+
 // Impl reports the implementation tier a kernel dispatches to on this host:
-// "avx2", "neon" or "generic". Kernels are "scale2to1", "luma", "resample"
-// and "rotate90"; an unknown name returns "". The tier is for the 1-channel
-// path of scale2to1; RGB scale2to1 is always generic.
+// "avx2", "neon" or "generic". Kernels are "scale2to1", "luma", "resample",
+// "rotate90" and "subsample1bpp"; an unknown name returns "". The tier is for
+// the 1-channel path of scale2to1; RGB scale2to1 is always generic.
 func Impl(kernel string) string {
 	switch kernel {
 	case "scale2to1":
 		return scale.Impl()
 	case "luma":
 		return luma.Impl()
-	case "resample", "rotate90":
+	case "resample", "rotate90", "subsample1bpp":
 		return "generic"
 	}
 	return ""

@@ -34,7 +34,7 @@ jobs:
           for t in generic avx2 avx512; do RASTERGO_CPU=$t go test -count=1 -v -run 'TestImpl|TestGolden' . || exit 1; done
       - name: Fuzz seeds and a short fuzz
         run: |
-          for f in FuzzScale2to1 FuzzLuma FuzzRotate90 FuzzResample; do go test -run '^$' -fuzz "^$f\$" -fuzztime 10s . || exit 1; done
+          for f in FuzzScale2to1 FuzzLuma FuzzRotate90 FuzzResample FuzzSubsample1bpp; do go test -run '^$' -fuzz "^$f\$" -fuzztime 10s . || exit 1; done
       - name: No-FMA scan
         run: ./scripts/nofma.sh
       - name: Kernel bench (keep rule input, not a gate)
